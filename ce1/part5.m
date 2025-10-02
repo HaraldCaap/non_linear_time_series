@@ -11,7 +11,7 @@ clear;
 
 %% 1) Load data (absolute path for robusbest_lag=2;
 
-dataPath = '/Users/hcaap/Desktop/Skola/Olinjär Tidsserie/Computer Exercises/comp_ex_1_scrips_2018/matlab/DataPart5.csv';
+dataPath = 'DataPart5.csv';
 T = readtable(dataPath);
 vars = T.Properties.VariableNames;
 icol = find(varfun(@isnumeric, T, 'OutputFormat','uniform'), 1, 'first');
