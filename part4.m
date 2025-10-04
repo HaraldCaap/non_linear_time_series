@@ -169,7 +169,7 @@ ylabel('$U_a(W)$','Interpreter','latex');
 title('Estimated $U_a(W)$','Interpreter','latex');
 legend('Location','best','Interpreter','latex');
 
-% ===== Optional: visualize fitted surface Φ ≈ a(W) + b(W)ΔT =====
+
 figure('Name','Fitted surface: Φ(W,ΔT)','Color','w');
 surf(xGrid, dtGrid, phiFit, 'EdgeColor','none'); colormap parula; view(135,30);
 xlabel('$W$'); ylabel('$\Delta T$'); zlabel('$\hat{\Phi}$'); grid on;
