@@ -45,10 +45,10 @@ plot(xgrid_1A, Ua_hat_1A, 'k-', 'LineWidth', 2);
 grid on; box on;
 xlabel('Wind speed $W$', 'Interpreter','latex'); 
 ylabel('$U_a(W)$', 'Interpreter','latex');
-title('Color-coded by $\Delta T$ (all $| \Delta T | > 0$)', 'Interpreter','latex');
-cb = colorbar; 
+titleString = sprintf('All $| \\Delta T | > 0$) and h = %.1f', h1D_1A);
+title(titleString, 'Interpreter', 'latex');cb = colorbar; 
 cb.Label.String = 'Temperature difference $\Delta T$';
-colormap turbo;
+cb.Label.Interpreter = 'latex'; % Ensure LaTeX interpreter is usedcolormap turbo;
 
 
 %% 1D approach different threshold 1B
@@ -70,10 +70,11 @@ plot(xgrid_1B, Ua_hat_1B, 'k-', 'LineWidth', 2);
 grid on; box on;
 xlabel('Wind speed $W$', 'Interpreter','latex'); 
 ylabel('$U_a(W)$', 'Interpreter','latex');
-title(sprintf('Color-coded by $\\Delta T$ with $|\\Delta T| > %d$', dT_thr1B), ...
+title(sprintf('$|\\Delta T| > %d$', dT_thr1B), ...
       'Interpreter','latex');
 cb = colorbar; 
 cb.Label.String = 'Temperature difference $\Delta T$';
+cb.Label.Interpreter = 'latex'; 
 colormap turbo;
 
 
@@ -168,7 +169,7 @@ ylabel('$U_a(W)$','Interpreter','latex');
 title('Estimated $U_a(W)$','Interpreter','latex');
 legend('Location','best','Interpreter','latex');
 
-% ===== Optional: visualize fitted surface Φ ≈ a(W) + b(W)ΔT =====
+
 figure('Name','Fitted surface: Φ(W,ΔT)','Color','w');
 surf(xGrid, dtGrid, phiFit, 'EdgeColor','none'); colormap parula; view(135,30);
 xlabel('$W$'); ylabel('$\Delta T$'); zlabel('$\hat{\Phi}$'); grid on;
