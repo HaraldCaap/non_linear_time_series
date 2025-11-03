@@ -1,0 +1,42 @@
+# MATLAB backup and autosave files
+*.asv
+*.m~
+*.backup
+
+# MATLAB cache and temp files
+*.mat
+*.slxc
+*.mex*
+*.mdl.autosave
+*.slx.autosave
+
+# Simulink code generation & build products
+slprj/
+sccprj/
+codegen/
+*_ert_rtw/
+*_tmw/
+*_mcr/
+html/
+*.log
+
+# Packaged apps / toolboxes
+*.mlappinstall
+*.mltbx
+
+# MATLAB project files (optional — remove if you want to track)
+*.prj
+
+# Temporary workspace files
+*.tmp
+*.temp
+tempname.m
+
+# OS-specific junk
+.DS_Store
+Thumbs.db
+
+# IDE & editor files
+.vscode/
+.idea/
+*.swp
