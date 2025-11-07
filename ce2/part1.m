@@ -1,5 +1,5 @@
 %% SETAR(2;1;1)
-N = 10000;
+N = 3000;
 e = randn(N,1);
 x = zeros(N,1);
 
@@ -45,7 +45,7 @@ for d = 1:10
     %    - (1 + p(2)*x(d:N-1)).*(x(1:N-d)>r1)).^2);
 
     options = optimset('MaxIter', 1000, 'MaxFunEvals', 10000, 'Display', 'off', 'TolX', 1e-6, 'TolFun', 1e-6);
-    p0 = [-1, 0, 1, 0, 0];
+    p0 = [0, 0, 0, 0, 0];
     %p0 = [0,0];
     % Find minimum using fminsearch
     [p_opt, fval] = fminsearch(Q, p0, options);
@@ -53,9 +53,9 @@ for d = 1:10
         best_val = fval;
         best_d = d;
         best_p = p_opt;
-        best_r = r;
     end
 end
+best_p
 
 %% 
 % Iterate over multiple values of d and r
@@ -68,11 +68,11 @@ for d = 1:10
             - (p(3) + p(4)*x(d:N-1)).*(x(1:N-d)>r)).^2);
         
         %Q = @(p) sum((x(d+1:N) ...
-        %    - (-1 + p(1)*x(d:N-1)).*(x(1:N-d)<=r1) ...
-        %    - (1 + p(2)*x(d:N-1)).*(x(1:N-d)>r1)).^2);
+        %    - (-1 + p(1)*x(d:N-1)).*(x(1:N-d)<=r) ...
+        %    - (1 + p(2)*x(d:N-1)).*(x(1:N-d)>r)).^2);
     
         options = optimset('MaxIter', 1000, 'MaxFunEvals', 10000, 'Display', 'off', 'TolX', 1e-6, 'TolFun', 1e-6);
-        p0 = [-1, 0, 1, 0];
+        p0 = [0, 0, 0, 0];
         %p0 = [0,0];
         % Find minimum using fminsearch
         [p_opt, fval] = fminsearch(Q, p0, options);
