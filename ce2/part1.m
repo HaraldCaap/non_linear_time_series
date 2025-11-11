@@ -1,85 +1,99 @@
-%% SETAR(2;1;1)
-N = 3000;
-e = randn(N,1);
-x = zeros(N,1);
+clear all; close all; clc;
 
-% Parameters 
-r1 = 0; % threshold
-a0 = [-1.0, 1.0]; % coefficients a_0^J
-a1 = [0.6, 0.4]; % coefficients a_1^J
+%% --- Simulate data 
+N = 1000;
+e_k = randn(N,1);
+x_k = zeros(N,1);
 
-% Initialize the process depending on the regime
-if 0 <= r1
-    x(1) = sqrt(1 / (1 - a1(1)^2)) * e(1);
-else
-    x(1) = sqrt(1 / (1 - a1(2)^2)) * e(1);
+% True parameters
+r_true  = 0;
+a10 = -1; a11 = 0.6;
+a20 =  1; a21 = 0.4;
+
+x_k(1) = sqrt(1/(1 - a11^2)) * e_k(1);
+for n = 2:N
+    I1 = (x_k(n-1) <= r_true);
+    I2 = (x_k(n-1) >  r_true);
+    x_k(n) = (a10 + a11 * x_k(n-1)) * I1 + (a20 + a21 * x_k(n-1)) * I2 + e_k(n);
 end
 
-% Simulate the process
-for n=2:N
-    if x(n-1) <= r1
-        x(n) = a0(1) + a1(1)*x(n-1) + e(n);
-    else
-        x(n) = a0(2) + a1(2)*x(n-1) + e(n);
-    end
-end
-
-% Plot
 figure;
-plot(x)
-yline(r1, 'k--')
-xlabel("Time")
-ylabel("x_t")
-title("Simulation of SETAR(2;1;1)")
+plot(x_k); yline(r_true, 'k--', 'threshold');
+title('Simulated SETAR(2;1;1) series');
+xlabel('t'); ylabel('x_t');
 
-%% 
-% Iterate over multiple values of d
-best_val = Inf;
-for d = 1:10
-    Q = @(p) sum((x(d+1:N) ...
-        - (p(1) + p(2).*x(d:N-1)).*(x(1:N-d)<=p(5)) ...
-        - (p(3) + p(4).*x(d:N-1)).*(x(1:N-d)>p(5))).^2);
-    
-    %Q = @(p) sum((x(d+1:N) ...
-    %    - (-1 + p(1)*x(d:N-1)).*(x(1:N-d)<=r1) ...
-    %    - (1 + p(2)*x(d:N-1)).*(x(1:N-d)>r1)).^2);
 
-    options = optimset('MaxIter', 1000, 'MaxFunEvals', 10000, 'Display', 'off', 'TolX', 1e-6, 'TolFun', 1e-6);
-    p0 = [0, 0, 0, 0, 0];
-    %p0 = [0,0];
-    % Find minimum using fminsearch
-    [p_opt, fval] = fminsearch(Q, p0, options);
-    if fval < best_val
-        best_val = fval;
-        best_d = d;
-        best_p = p_opt;
-    end
-end
+%%
+d_candidates = 1:5;                            % possible delay values
+r_candidates = linspace(min(x_k), max(x_k), 30); % grid of thresholds
+best_loss = Inf;                               % initialize
+best_params = struct();
 
-%% 
-% Iterate over multiple values of d and r
-best_val = Inf;
-for d = 1:10
-    r_cands = linspace(min(x), max(x), 100);
-    for r = r_cands
-        Q = @(p) sum((x(d+1:N) ...
-            - (p(1) + p(2)*x(d:N-1)).*(x(1:N-d)<=r) ...
-            - (p(3) + p(4)*x(d:N-1)).*(x(1:N-d)>r)).^2);
+% Store loss surface for visualization
+loss_surface = zeros(length(d_candidates), length(r_candidates));
+
+for i = 1:length(d_candidates)
+    d = d_candidates(i);
+    for j = 1:length(r_candidates)
+        r = r_candidates(j);
         
-        %Q = @(p) sum((x(d+1:N) ...
-        %    - (-1 + p(1)*x(d:N-1)).*(x(1:N-d)<=r) ...
-        %    - (1 + p(2)*x(d:N-1)).*(x(1:N-d)>r)).^2);
-    
-        options = optimset('MaxIter', 1000, 'MaxFunEvals', 10000, 'Display', 'off', 'TolX', 1e-6, 'TolFun', 1e-6);
-        p0 = [0, 0, 0, 0];
-        %p0 = [0,0];
-        % Find minimum using fminsearch
-        [p_opt, fval] = fminsearch(Q, p0, options);
-        if fval < best_val
-            best_val = fval;
-            best_d = d;
-            best_p = p_opt;
-            best_r = r;
+        % Objective for given (r, d): minimize in theta_l = [alpha0, alpha1, beta0, beta1]
+        Q = @(theta_l) setar_sse_l(theta_l, r, d, x_k);
+        init_guess = [0, 0.5, 0, 0.5];
+        
+        [theta_l_hat, fval] = fminsearch(Q, init_guess);
+        loss_surface(i,j) = fval;   % store for heatmap
+        
+        if fval < best_loss
+            best_loss = fval;
+            best_params = struct( ...
+                'theta_l', theta_l_hat, ...
+                'r', r, ...
+                'd', d, ...
+                'loss', fval ...
+            );
         end
     end
+end
+
+
+%% --- Display best results ---
+disp('Best parameter estimates:');
+fprintf('alpha0 = %.3f, alpha1 = %.3f\n', best_params.theta_l(1), best_params.theta_l(2));
+fprintf('beta0  = %.3f, beta1  = %.3f\n', best_params.theta_l(3), best_params.theta_l(4));
+fprintf('r_hat  = %.3f, d_hat  = %d\n', best_params.r, best_params.d);
+
+
+%% --- Plot loss surface ---
+figure;
+imagesc(r_candidates, d_candidates, loss_surface);
+set(gca, 'YDir', 'normal');
+colorbar;
+xlabel('Threshold r');
+ylabel('Delay d');
+title('Loss surface Q(\theta_l) over (r,d)');
+hold on;
+plot(best_params.r, best_params.d, 'rx', 'MarkerSize', 12, 'LineWidth', 2);
+text(best_params.r, best_params.d, '  Optimum', 'Color', 'r', 'FontWeight', 'bold');
+hold off;
+
+
+%% --- Supporting function ---
+function SSE = setar_sse_l(theta_l, r, d, x)
+    % Extract parameters
+    alpha0 = theta_l(1); alpha1 = theta_l(2);
+    beta0  = theta_l(3); beta1  = theta_l(4);
+    N = length(x);
+
+    err = zeros(N - d, 1);
+    for t = (d + 1):N
+        if x(t - d) <= r
+            x_hat = alpha0 + alpha1 * x(t - 1);
+        else
+            x_hat = beta0 + beta1 * x(t - 1);
+        end
+        err(t - d) = x(t) - x_hat;
+    end
+    
+    SSE = sum(err.^2) / (N - d);   % mean squared error
 end
