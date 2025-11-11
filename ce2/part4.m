@@ -1,7 +1,8 @@
-%% a
+
 clear all; close all;
+
 %% Parameters
-N = 500;
+N = 1500;
 M = 20; % Number of simulations
 
 a = 0.4;
@@ -9,6 +10,8 @@ sigma_v = 1;
 sigma_e = 1;
 
 %% Simulate
+rng(0)
+
 v = sigma_v * randn(N,M);
 e = sigma_e * randn(N,M);
 
@@ -25,6 +28,21 @@ for k=1:M
     end
 end
 
+%% Plot simulation
+figure;
+% Generate the plots for the simulated data
+subplot(211)
+plot(Y(:, 1:2)); % Plot the observed data
+xlabel('Time');
+ylabel('Observed Y');
+title('Simulated Observations');
+
+subplot(212)
+plot(X(:,1:2)); % Plot the true state
+xlabel('Time');
+ylabel('True X');
+title('True State');
+
 %%
 %----------------------------
 % Here comes the EKF algorithm
@@ -32,7 +50,7 @@ end
 % Initializing:
 aInit=0.5;  % Initial value of "a"
 aVarInit=1; % Initial variance on "a" try to var
-sigma_v=1;  % sigma_v, try 10 and 1
+sigma_v=10;  % sigma_v, try 10 and 1
 
 Rv=[sigma_v 0; 0 0];  
 Re=1;               % sigma_e
@@ -74,61 +92,17 @@ for k=1:M
 end
 
 %% Plots
-figure; grid on; hold on;
-sgtitle("a_{initial}="+aInit + ", \sigma_v^2="+ sigma_v + ", initial Var[a]="+aVarInit)
+figure; 
+%sgtitle("a_{initial}="+aInit + ", \sigma_v^2="+ sigma_v + ", initial Var[a]="+aVarInit)
+subplot(211)
+grid on; hold on;
 yline(a, 'k--', 'LineWidth', 2)
 plot(A, 'b:')
-plot(mean(A,2), 'b', 'LineWidth', 2)
 ylabel("a_t")
 hold off
 
-
-%%
-figure;
-subplot(211)
-plot(Y(:,1))
-title("Y_t")
 subplot(212)
-plot(X(:,1))
-title("X_t")
-
-figure;
-plot(x, 'LineWidth',1.2); hold on;
-plot(y, 'LineWidth',0.8);
-legend("True state x", "Observation y");
-title('True state and observations'); grid on;
-
-figure;
-plot(x, 'LineWidth',1.2); hold on;
-plot(z(:,1), 'LineWidth',0.8);
-legend("True state x", "Predicted state");
-title('Prediction vs truth'); grid on;
-
-figure;
-subplot(3,1,1);
-plot(z(:,2));
-hold on
-yline(a, 'k--')
+grid on; hold on;
+plot(Avar, 'b:')
+ylabel("V[a_t]")
 hold off
-title('Parameter estimation')
-
-subplot(3,1,2);
-plot(x - z(:,1));
-title('Prediction error (x - predicted x)'); grid on;
-
-subplot(3,1,3);
-plot(avar);
-title('Predicted variance'); grid on;
-
-figure;
-plot(z(:,2));
-hold on
-plot(z(:,2)+2*avar, 'r--')
-plot(z(:,2)-2*avar, 'r--')
-yline(a, 'k--')
-hold off
-title('Parameter estimation with confidence interval')
-
-%figure;
-%histogram(x - z(:,1), 30);
-%title('Histogram of prediction errors'); grid on;
