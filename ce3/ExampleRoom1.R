@@ -11,7 +11,7 @@ Hour <- as.numeric(strftime(AllDat$date, format="%H"))
 Pred <- predict(fit1)
 plot(Pred[[1]]$state$pred$Ti - AllDat$yTi1 ~ Hour)
 # What is going on 10 AM?
-# Try to fir a varying effective window area
+# Try to fit a varying effective window area
 
 
 plot(AllDat$Gv ~ Hour)

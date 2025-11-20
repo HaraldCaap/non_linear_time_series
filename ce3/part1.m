@@ -72,7 +72,7 @@ figure;
 t = tiledlayout(2, 3);
 for i=1:length(sigmas)
     nexttile;
-    histogram2(Y1(i,:), Y2(i,:), 'DisplayStyle','tile','ShowEmptyBins','on')
+    histogram2(Y1(i,:), Y2(i,:), nbins, 'DisplayStyle','tile','ShowEmptyBins','on')
     xlabel("Y1")
     ylabel("Y2")
     title("\sigma = " + sigmas(i))
