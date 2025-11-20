@@ -40,3 +40,8 @@ Thumbs.db
 .vscode/
 .idea/
 *.swp
+.Rproj.user
+
+# R specific files
+.Rhistory
+*.Rproj
