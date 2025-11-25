@@ -6,9 +6,9 @@ sdeExRoom1 <- function(data, yTi,Ph){
   model = ctsm()
   
   # Add a system equation and thereby also a state
-  # Gv in Ti: Aw/Ci*Gv or Tm: Aw/Cm*Gv
-  model$addSystem(dTi ~  1/Ci*(1/Ria*(Ta-Ti) + 1/Rim*(Tm-Ti)  + Ph + (a1*bs1+a2*bs2+a3*bs3+a4*bs4+a5*bs5)*Gv)*dt + exp(p11)*dw1)
+  model$addSystem(dTi ~  1/Ci*(1/Ria*(Ta-Ti) + 1/Rim*(Tm-Ti)  + H + (a1*bs1+a2*bs2+a3*bs3+a4*bs4+a5*bs5)*Gv)*dt + exp(p11)*dw1)
   
+  model$addSystem(dH ~ 1/tau *(Ph-H) *dt + exp(phh)*dwh)
   model$addSystem(dTm ~  1/Cm*(1/Rim*(Ti-Tm))*dt + exp(p22)*dw2)
   # Set the names of the inputs
   model$addInput(Ta,Gv,Ph,bs1,bs2,bs3,bs4,bs5)
@@ -21,6 +21,7 @@ sdeExRoom1 <- function(data, yTi,Ph){
   # Set the initial value (for the optimization) of the value of the state at the starting time point
   model$setParameter(Ti = c(init = 15, lb = 0, ub = 40))
   model$setParameter(Tm = c(init = 15, lb = 0, ub = 40))
+  model$setParameter(H = c(init = Ph[1], lb = 0, ub = 40))
   
   ##----------------------------------------------------------------
   # Set the initial value for the optimization
@@ -36,6 +37,8 @@ sdeExRoom1 <- function(data, yTi,Ph){
   model$setParameter(a3 = c(init = 1, lb = -100, ub = 100))
   model$setParameter(a4 = c(init = 1, lb = -100, ub = 100))
   model$setParameter(a5 = c(init = 1, lb = -100, ub = 100))
+  model$setParameter(tau = c(init = 1, lb = 0, ub = 20))
+  model$setParameter(phh = c(init = 1, lb = -30, ub = 10))
   ##----------------------------------------------------------------   
   # Run the parameter optimization
   

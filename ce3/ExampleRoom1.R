@@ -9,7 +9,13 @@ summary(fit1,extended=TRUE)
 Hour <- as.numeric(strftime(AllDat$date, format="%H"))
 
 Pred <- predict(fit1)
-plot(Pred[[1]]$state$pred$Ti - AllDat$yTi1 ~ Hour)
+plot(Pred[[1]]$state$pred$Ti - AllDat$yTi1 ~ Hour, 
+     pch = 1,                 # open circle
+     col = "darkred",
+     xlab = "Hour of Day",
+     ylab = "Residuals",
+     cex = 0.8)
+abline(h = 0, col = "black", lwd = 2)
 # What is going on 10 AM?
 # Try to fit a varying effective window area
 
@@ -41,6 +47,14 @@ AllDat$bs3 = bs3
 AllDat$bs4 = bs4
 AllDat$bs5 = bs5
 
+plot(bs1[15:38] ~ Hour[15:38], type='l', 
+     xlab="Hour",
+     ylab="")
+lines(bs2[15:38] ~ Hour[15:38])
+lines(bs3[15:38] ~ Hour[15:38])
+lines(bs4[15:38] ~ Hour[15:38])
+lines(bs5[15:38] ~ Hour[15:38])
+
 
 ### You will have to implement sdeTiTmAv ###
 source("sdeTiTmAv.R")
@@ -48,8 +62,43 @@ fit2 <- sdeTiTmAv(AllDat,AllDat$yTi1,AllDat$Ph1)
 summary(fit2, extended = TRUE)
 
 plot(bs[14:27,1]*fit2$xm[3]+bs[14:27,2]*fit2$xm[4]+bs[14:27,3]*fit2$xm[5]+bs[14:27,4]*fit2$xm[6]+bs[14:27,5]*fit2$xm[7],type='l')
-plot(bs1*fit2$xm[3]+bs2*fit2$xm[4]+bs3*fit2$xm[5]+bs4*fit2$xm[6]+bs5*fit2$xm[7] ~ Hour,type='l')
+plot(bs1*fit2$xm[3]+bs2*fit2$xm[4]+bs3*fit2$xm[5]+bs4*fit2$xm[6]+bs5*fit2$xm[7] ~ Hour,type='l', xlab="Hour of day", ylab="")
 
 
 Pred2 <- predict(fit2)
-plot(Pred2[[1]]$state$pred$Ti - AllDat$yTi1 ~ Hour)
+plot(Pred2[[1]]$state$pred$Ti - AllDat$yTi4 ~ Hour, 
+     pch = 1,                 # open circle
+     col = "darkred",
+     xlab = "Hour of Day",
+     ylab = "Residuals",
+     cex = 0.8)
+abline(h = 0, col = "black", lwd = 2)
+
+# Residuals
+res2 <- Pred2[[1]]$state$pred$Ti - AllDat$yTi1
+res1 <- Pred[[1]]$state$pred$Ti  - AllDat$yTi1
+
+# Base plot: Pred residuals (open circles)
+plot(Hour, res1,
+     pch = 16,                 # filled circles
+     col = "red",
+     xlab = "Hour of Day",
+     ylab = "Residuals",
+     cex = 0.8)
+
+# Add reference line
+abline(h = 0, col = "black", lwd = 2)
+
+# Add Pred2 residuals as additional points (filled circles or different color)
+points(Hour, res2,
+       pch = 1,              # open circle
+       col = "blue",
+       cex = 0.8)
+
+# Add legend
+legend("bottomleft",
+       legend = c("Residuals original model", "Residuals with splines"),
+       col = c("red", "blue"),
+       pch = c(16, 1),
+       pt.cex = c(0.8, 0.7),
+       bty = "n")

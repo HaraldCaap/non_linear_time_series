@@ -51,6 +51,10 @@ end
 t.TileSpacing = 'compact';
 t.Padding = 'compact';
 
+figure;
+subplot(121)
+plot(Y1)
+
 %% b
 
 nbins = 100;
