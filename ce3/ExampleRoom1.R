@@ -91,7 +91,7 @@ abline(h = 0, col = "black", lwd = 2)
 
 # Add Pred2 residuals as additional points (filled circles or different color)
 points(Hour, res2,
-       pch = 1,              # open circle
+       pch = 16,              # open circle
        col = "blue",
        cex = 0.8)
 
@@ -99,6 +99,41 @@ points(Hour, res2,
 legend("bottomleft",
        legend = c("Residuals original model", "Residuals with splines"),
        col = c("red", "blue"),
-       pch = c(16, 1),
+       pch = c(16, 16),
        pt.cex = c(0.8, 0.7),
+       bty = "n")
+
+MSE1   <- mean(res1^2, na.rm = TRUE)
+MSE2   <- mean(res2^2, na.rm = TRUE)
+
+## --------- Compute standard accuracy metrics and plot residuals ---------
+y_pred <- Pred2[[1]]$state$pred$Ti   # predicted measurement
+y_true <- AllDat$yTi1            # measured values
+error <- y_pred - y_true
+sd_pred <- Pred2[[1]]$state$sd$Ti
+upper    <- y_pred + 2 * sd_pred
+lower    <- y_pred - 2 * sd_pred
+
+t <- AllDat$date[1:200]
+# Start plot with true values as X marks
+plot(t, y_true[1:200],
+     pch = 4,                 # X marker
+     col = "black",
+     xlab = "Time",
+     ylab = "Temperature [°C]",
+     main = "True vs Predicted Temperature with Confidence Interval")
+# Add predicted values as open circles
+points(t, y_pred[1:200],
+       pch = 1,               # open circle
+       col = "blue")
+# Add the upper and lower CI as lines
+lines(t, upper[1:200], col = "blue", lwd = 1)
+lines(t, lower[1:200], col = "blue", lwd = 1)
+# Optional: Add a legend
+legend("topright",
+       legend = c("True (X)", "Predicted (O)", "95% CI"),
+       pch    = c(4, 1, NA),
+       lty    = c(0, 0, 1),
+       col    = c("black", "blue", "blue"),
+       pt.cex = 1.2,
        bty = "n")

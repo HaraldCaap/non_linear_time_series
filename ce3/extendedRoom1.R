@@ -79,7 +79,7 @@ var_pred <- Pred[[1]]$state$var[1,1,]
 upper    <- y_pred + 2 * sqrt(var_pred)
 lower    <- y_pred - 2 * sqrt(var_pred)
 
-# Basic residual plot with improved style
+# Basic residual plot
 plot(Hour[1:n], error,
      pch = 1,                 # open circle
      col = "darkred",
@@ -123,6 +123,6 @@ plot(Hour[1:n], var_pred,
      cex = 0.8)
 
   
-RMSE   <- sqrt(mean(error^2, na.rm = TRUE))
+MSE   <- mean(error^2, na.rm = TRUE)
 MAE    <- mean(abs(error), na.rm = TRUE)
 R2     <- 1 - sum(error^2) / sum((y_true - mean(y_true))^2)

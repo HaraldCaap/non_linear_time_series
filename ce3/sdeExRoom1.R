@@ -8,7 +8,7 @@ sdeExRoom1 <- function(data, yTi,Ph){
   # Add a system equation and thereby also a state
   model$addSystem(dTi ~  1/Ci*(1/Ria*(Ta-Ti) + 1/Rim*(Tm-Ti)  + H + (a1*bs1+a2*bs2+a3*bs3+a4*bs4+a5*bs5)*Gv)*dt + exp(p11)*dw1)
   
-  model$addSystem(dH ~ 1/tau *(Ph-H) *dt + exp(phh)*dwh)
+  model$addSystem(dH ~ 1/tau *(K*Ph-H) *dt + exp(phh)*dwh)
   model$addSystem(dTm ~  1/Cm*(1/Rim*(Ti-Tm))*dt + exp(p22)*dw2)
   # Set the names of the inputs
   model$addInput(Ta,Gv,Ph,bs1,bs2,bs3,bs4,bs5)
@@ -39,6 +39,7 @@ sdeExRoom1 <- function(data, yTi,Ph){
   model$setParameter(a5 = c(init = 1, lb = -100, ub = 100))
   model$setParameter(tau = c(init = 1, lb = 0, ub = 20))
   model$setParameter(phh = c(init = 1, lb = -30, ub = 10))
+  model$setParameter(K = c(init=1, lb=0, ub=20))
   ##----------------------------------------------------------------   
   # Run the parameter optimization
   
