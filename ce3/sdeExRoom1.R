@@ -1,17 +1,27 @@
-sdeExRoom1 <- function(data, yTi,Ph){
+sdeExRoom1 <- function(data, yTi,Ph, yTj){
   data$yTi <- yTi
   data$Ph <- Ph
+  data$yTj <- yTj
   
   # Generate a new object of class ctsm
   model = ctsm()
   
   # Add a system equation and thereby also a state
-  model$addSystem(dTi ~  1/Ci*(1/Ria*(Ta-Ti) + 1/Rim*(Tm-Ti)  + di*H + (a1*bs1+a2*bs2+a3*bs3+a4*bs4+a5*bs5)*Gv)*dt + exp(p11)*dw1)
+  #model$addSystem(dTi ~  1/Ci*(1/Ria*(Ta-Ti) + 1/Rim*(Tm-Ti) + 1/Rij*(yTj-Ti) + alpha*H + (a1*bs1+a2*bs2+a3*bs3+a4*bs4+a5*bs5)*Gv)*dt + exp(p11)*dw1)
+  #model$addSystem(dH ~ 1/tau *(Ph-H) *dt + exp(phh)*dwh)
   
-  model$addSystem(dH ~ 1/tau *(Ph-H) *dt + exp(phh)*dwh)
-  model$addSystem(dTm ~  1/Cm*(1/Rim*(Ti-Tm)+dm*H)*dt + exp(p22)*dw2)
+  #model$addSystem(dTi ~  1/Ci*(1/Ria*(Ta-Ti) + 1/Rim*(Tm-Ti) + 1/Rir*(Tr-Ti) + (a1*bs1+a2*bs2+a3*bs3+a4*bs4+a5*bs5)*Gv)*dt + exp(p11)*dw1)
+  #model$addSystem(dTr ~ 1/Cr*(1/Rir*(Ti-Tr) + Ph)*dt + exp(prr)*dwr)
+  
+  #model$addSystem(dTi ~  1/Ci*(1/Ria*(Ta-Ti) + 1/Rim*(Tm-Ti) + 1/Rij*(yTj-Ti) + Ph + (a1*bs1+a2*bs2+a3*bs3+a4*bs4+a5*bs5)*Gv)*dt + exp(p11)*dw1)
+  
+  model$addSystem(dTi ~  1/Ci*(1/Ria*(Ta-Ti) + 1/Rim*(Tm-Ti) + 1/Rij*(yTj-Ti) + 1/Rir*(Tr-Ti) + (a1*bs1+a2*bs2+a3*bs3+a4*bs4+a5*bs5)*Gv)*dt + exp(p11)*dw1)
+  model$addSystem(dTr ~ 1/Cr*(1/Rir*(Ti-Tr) + 1/Rjr*(yTj-Tr) + Ph)*dt + exp(prr)*dwr)
+  
+  model$addSystem(dTm ~  1/Cm*(1/Rim*(Ti-Tm))*dt + exp(p22)*dw2)
   # Set the names of the inputs
-  model$addInput(Ta,Gv,Ph,bs1,bs2,bs3,bs4,bs5)
+  model$addInput(Ta,Gv,Ph,yTj,bs1,bs2,bs3,bs4,bs5)
+  
   # Set the observation equation: Ti is the state, yTi is the measured output
   model$addObs(yTi ~ Ti)
   # Set the variance of the measurement error
@@ -21,7 +31,10 @@ sdeExRoom1 <- function(data, yTi,Ph){
   # Set the initial value (for the optimization) of the value of the state at the starting time point
   model$setParameter(Ti = c(init = 15, lb = 0, ub = 40))
   model$setParameter(Tm = c(init = 15, lb = 0, ub = 40))
-  model$setParameter(H = c(init = Ph[1], lb = 0, ub = 40))
+  
+  model$setParameter(Tr = c(init = 15, lb = 0, ub = 40))
+  
+  #model$setParameter(H = c(init = Ph[1], lb = 0, ub = 40))
   
   ##----------------------------------------------------------------
   # Set the initial value for the optimization
@@ -37,11 +50,19 @@ sdeExRoom1 <- function(data, yTi,Ph){
   model$setParameter(a3 = c(init = 1, lb = -100, ub = 100))
   model$setParameter(a4 = c(init = 1, lb = -100, ub = 100))
   model$setParameter(a5 = c(init = 1, lb = -100, ub = 100))
-  model$setParameter(tau = c(init = 1, lb = 0, ub = 20))
-  model$setParameter(phh = c(init = 1, lb = -30, ub = 10))
-  model$setParameter(di = c(init = 1, lb = 0, ub = 20))
-  model$setParameter(dm = c(init = 1, lb = 0, ub = 20))
   
+  #model$setParameter(tau = c(init = 1, lb = 0, ub = 20))
+  #model$setParameter(phh = c(init = 1, lb = -30, ub = 10))
+  #model$setParameter(alpha = c(init = 1, lb = 0, ub = 20))
+  
+  model$setParameter(Cr = c(init = 1, lb = 1E-5, ub = 1E5))
+  model$setParameter(Rir = c(init = 20, lb = 1E-4, ub = 1E5))
+  model$setParameter(prr = c(init = 1, lb = -30, ub = 10))
+  
+  model$setParameter(Rij = c(init = 20, lb = 1E-4, ub = 1E5))
+  
+  model$setParameter(Rjr = c(init = 20, lb = 1E-4, ub = 1E5))
+
   ##----------------------------------------------------------------   
   # Run the parameter optimization
   

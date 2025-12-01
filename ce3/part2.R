@@ -13,9 +13,14 @@ fit_orig <- sdeTiTm(AllDat,AllDat$yTi1,AllDat$Ph1)
 summary(fit_orig,extended=TRUE)
 Pred_orig <- predict(fit_orig)
 
+res_orig <- Pred_orig[[1]]$state$pred$Ti - AllDat$yTi1
+MSE_orig <- mean(res_orig^2, na.rm = TRUE)
+MAE_orig <- mean(abs(res_orig), na.rm = TRUE)
+R2_orig <- 1 - sum(res_orig^2) / sum((AllDat$yTi1 - mean(AllDat$yTi1))^2)
+
 # Plot residuals
 plot(Pred_orig[[1]]$state$pred$Ti - AllDat$yTi1 ~ Hour, 
-     pch = 1,                 # open circle
+     pch = 1,
      col = "darkred",
      xlab = "Hour of Day",
      ylab = "Residuals",
@@ -56,6 +61,13 @@ fit_splines <- sdeTiTmAv(AllDat,AllDat$yTi1,AllDat$Ph1)
 summary(fit_splines, extended = TRUE)
 Pred_splines <- predict(fit_splines)
 
+res_splines <- Pred_splines[[1]]$state$pred$Ti  - AllDat$yTi1
+
+# Compute standard metrics
+MSE_splines <- mean(res_splines^2, na.rm = TRUE)
+MAE_splines <- mean(abs(res_splines), na.rm = TRUE)
+R2_splines <- 1 - sum(res_splines^2) / sum((AllDat$yTi1 - mean(AllDat$yTi1))^2)
+
 # Plot fitted splines
 plot(Hour, bs1*fit_splines$xm[3]+bs2*fit_splines$xm[4]+bs3*fit_splines$xm[5]+bs4*fit_splines$xm[6]+bs5*fit_splines$xm[7],
      type='l', 
@@ -63,9 +75,8 @@ plot(Hour, bs1*fit_splines$xm[3]+bs2*fit_splines$xm[4]+bs3*fit_splines$xm[5]+bs4
      ylab="")
 
 # Plot residulas
-Pred2 <- predict(fit2)
-plot(Pred2[[1]]$state$pred$Ti - AllDat$yTi4 ~ Hour, 
-     pch = 1,                 # open circle
+plot(Pred_splines[[1]]$state$pred$Ti - AllDat$yTi1 ~ Hour, 
+     pch = 1,
      col = "darkred",
      xlab = "Hour of Day",
      ylab = "Residuals",
@@ -73,20 +84,17 @@ plot(Pred2[[1]]$state$pred$Ti - AllDat$yTi4 ~ Hour,
 abline(h = 0, col = "black", lwd = 2)
 
 ## ----- Compare the two models -----
-# Residuals
-res_orig <- Pred_orig[[1]]$state$pred$Ti - AllDat$yTi1
-res_splines <- Pred_splines[[1]]$state$pred$Ti  - AllDat$yTi1
 
 # Plot residuals in the same plot
 plot(Hour, res_orig,
-     pch = 16,                 # filled circles
+     pch = 16,
      col = "red",
      xlab = "Hour of Day",
      ylab = "Residuals",
      cex = 0.8)
 abline(h = 0, col = "black", lwd = 2)
 points(Hour, res_splines,
-       pch = 16,              # open circle
+       pch = 16,
        col = "blue",
        cex = 0.8)
 legend("bottomleft",
@@ -96,30 +104,70 @@ legend("bottomleft",
        pt.cex = c(0.8, 0.7),
        bty = "n")
 
-# Compute standard metrics
-MSE_orig <- mean(res_orig^2, na.rm = TRUE)
-MSE_splines <- mean(res_splines^2, na.rm = TRUE)
-
-MAE_orig <- mean(abs(res_orig), na.rm = TRUE)
-MAE_splines <- mean(abs(res_splines), na.rm = TRUE)
-
-R2_orig <- 1 - sum(res_orig^2) / sum((AllDat$yTi1 - mean(AllDat$yTi1))^2)
-R2_splines <- 1 - sum(res_splines^2) / sum((AllDat$yTi1 - mean(AllDat$yTi1))^2)
-
 
 ## ----------- Part 2b -----------
-# ----- EDA (Exploratory Data Analysis) ----- 
+# EDA (Exploratory Data Analysis)
 plot(Hour, AllDat$yTi1,
-     pch = 1,                 # open circle
+     pch = 1,
      col = "darkred",
      xlab = "Hour of Day",
      ylab = "Temperature",
      cex = 0.8)
 plot(Hour, AllDat$Ph1,
-     pch = 1,                 # open circle
+     pch = 1,
      col = "darkred",
      xlab = "Hour of Day",
      ylab = "Heating power",
      cex = 0.8)
 # There seems to be some delay in the heating power compared to the indoor temperature
 
+# Fit extended/improved model
+n <- 3111 # If we only want to use part of data (remove later and use all data)
+source("sdeExRoom1.R")
+fit_ex <- sdeExRoom1(AllDat[1:n,],AllDat$yTi1[1:n],AllDat$Ph1[1:n],AllDat$yTi2[1:n]) 
+summary(fit_ex, extended = TRUE)
+
+Pred_ex <- predict(fit_ex, covariance = TRUE)
+
+# Residuals 
+res_ex <- Pred_ex[[1]]$state$pred$Ti[1:n] - AllDat$yTi1[1:n]
+
+# Compute standard metrics
+MSE_ex <- mean(res_ex^2, na.rm = TRUE)
+MAE_ex <- mean(abs(res_ex), na.rm = TRUE)
+R2_ex <- 1 - sum(res_ex^2) / sum((AllDat$yTi1[1:n] - mean(AllDat$yTi1[1:n]))^2)
+
+# Plot residuals
+plot(Hour[1:n], res_ex,
+     pch = 1,
+     col = "darkred",
+     xlab = "Hour of Day",
+     ylab = "Residuals",
+     cex = 0.8)
+# Horizontal zero line
+abline(h = 0, col = "black", lwd = 2)
+
+# Plot residuals in the same plot
+plot(Hour, res_splines,
+     pch = 16,
+     col = "red",
+     xlab = "Hour of Day",
+     ylab = "Residuals",
+     cex = 0.8)
+abline(h = 0, col = "black", lwd = 2)
+points(Hour[1:n], res_ex,
+       pch = 16,
+       col = "blue",
+       cex = 0.8)
+legend("bottomleft",
+       legend = c("Splines Model", "Extended model"),
+       col = c("red", "blue"),
+       pch = c(16, 16),
+       pt.cex = c(0.8, 0.8),
+       bty = "n")
+
+# Plot fitted splines
+plot(Hour, bs1*fit_ex$xm[3]+bs2*fit_ex$xm[4]+bs3*fit_ex$xm[5]+bs4*fit_ex$xm[6]+bs5*fit_ex$xm[7],
+     type='l', 
+     xlab="Hour of day", 
+     ylab="")

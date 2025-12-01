@@ -2,19 +2,23 @@ sde4Rooms <- function(data){
   # Create model object
   model = ctsm()
   
-  # Add states for rooms
+  ## states for radiators
+  model$addSystem(dTrn ~ 1/Cr*(1/R1r*(T1-Trn) + 1/R2r*(T2-Trn) + Ph1)*dt + exp(pr1)*dwr1)
+  model$addSystem(dTrs ~ 1/Cr*(1/R3r*(T1-Trs) + 1/R4r*(T2-Trs) + Ph2)*dt + exp(pr2)*dwr2)
+  
+  # Add states for room1
   model$addSystem(dT1 ~  
                     1/(flArea1*C)*(1/(Ra/exArea1)*(Ta-T1) + 1/(Rm/flArea1)*(Tm1-T1)  
-                                           + Ph1 
-                                           + Aw1*Gv 
-                                           + 1/(R12)*(T2-T1))*dt 
+                                   + 1/R1r*(Trn-T1)
+                                   + Aw1*Gv 
+                                   + 1/(R12)*(T2-T1))*dt 
                   + exp(p11)*dw1
                   )
   model$addSystem(dTm1 ~  1/(flArea1*Cm)*(1/(Rm/flArea1)*(T1-Tm1))*dt + exp(pm11)*dwm1)
   
   model$addSystem(dT2 ~  
                     1/(flArea2*C)*(1/(Ra/exArea2)*(Ta-T2) + 1/(Rm/flArea2)*(Tm2-T2)  
-                                      + Ph1 
+                                      + 1/R2r*(Trn-T2) 
                                       + Aw2*Gv 
                                       + 1/(R12)*(T1-T2) + 1/(R23)*(T3-T2))*dt 
                   + exp(p22)*dw2
@@ -23,7 +27,7 @@ sde4Rooms <- function(data){
   
   model$addSystem(dT3 ~  
                     1/(flArea3*C)*(1/(Ra/exArea3)*(Ta-T3) + 1/(Rm/flArea3)*(Tm3-T3)  
-                                      + Ph2 
+                                      + 1/R3r*(Trs-T3) 
                                       + Aw3*Gv 
                                       + 1/(R34)*(T4-T3) + 1/R23*(T2-T3))*dt 
                   + exp(p33)*dw3
@@ -32,7 +36,7 @@ sde4Rooms <- function(data){
   
   model$addSystem(dT4 ~  
                     1/(flArea4*C)*(1/(Ra/exArea4)*(Ta-T4) + 1/(Rm/flArea4)*(Tm4-T4)  
-                                      + Ph2 
+                                      + 1/R4r*(Trs-T4) 
                                       + Aw4*Gv 
                                       + 1/R34*(T3-T4))*dt 
                   + exp(p44)*dw4
