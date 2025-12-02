@@ -444,3 +444,112 @@ combined_spline_delay_neighbor_model <- function(data, yTi, Ph, yTj) {
   fit <- model$estimate(data, firstorder = TRUE)
   return(fit)
 }
+
+combined_spline_temp_delay_neighbor_model <- function(data, yTi, Ph, yTj) {
+  
+  data$yTi <- yTi
+  data$Ph  <- Ph
+  data$yTj <- yTj
+  
+  model <- ctsm()
+  
+  # =====================================================
+  # 1) Radiator temperature state: Tr(t)
+  # =====================================================
+  model$addSystem(
+    dTr ~ 1/Cr*(1/Rir*(Ti-Tr) + 1/Rjr*(yTj-Tr) + Ph)*dt + exp(p33) * dw3
+  )
+  
+  # =====================================================
+  # 2) Solar delay state: Sh(t)
+  # =====================================================
+  model$addSystem(
+    dSh ~ (1/tau_s) * (Gv - Sh) * dt + exp(p44) * dw4
+  )
+  
+  # =====================================================
+  # 3) Room 1 Air Temperature Ti(t) with all effects
+  # =====================================================
+  model$addSystem(
+    dTi ~ 1 / Ci * (
+      1/Ria * (Ta - Ti) +
+        1/Rim * (Tm - Ti) +
+        1/Rij * (yTj - Ti) +                 # inter-room heat connection
+        1/Rir * (Tr - Ti) +                     # heating from radiator
+        Sh * (Aw1*bs1 + Aw2*bs2 + Aw3*bs3 +
+                Aw4*bs4 + Aw5*bs5)             # delayed solar + spline shape
+    ) * dt + exp(p11) * dw1
+  )
+  
+  # =====================================================
+  # 4) Thermal Mass Tm(t)
+  # =====================================================
+  model$addSystem(
+    dTm ~ 1/Cm * (
+      1/Rim * (Ti - Tm)
+    ) * dt + exp(p22) * dw2
+  )
+  
+  # =====================================================
+  # Inputs
+  # =====================================================
+  model$addInput(Ta, Gv, Ph, yTj, bs1, bs2, bs3, bs4, bs5)
+  
+  # =====================================================
+  # Observation equation
+  # =====================================================
+  model$addObs(yTi ~ Ti)
+  model$setVariance(yTi ~ exp(e11))
+  
+  # =====================================================
+  # Parameters: states
+  # =====================================================
+  model$setParameter(Ti  = c(init = 23.6, lb = 0, ub = 40))
+  model$setParameter(Tm  = c(init = 21, lb = 0, ub = 40))
+  model$setParameter(Tr  = c(init = 20,    lb = -500, ub = 500))
+  model$setParameter(Sh  = c(init = 1.297, lb = -10, ub = 50))
+  
+  # =====================================================
+  # Physical parameters
+  # =====================================================
+  model$setParameter(Ci = c(init = 8.4,    lb = 1e-6, ub = 1e3))
+  model$setParameter(Cm = c(init = 400,  lb = 1e-6, ub = 1e4))
+  model$setParameter(Ria = c(init = 12,    lb = 1e-4, ub = 1e3))
+  model$setParameter(Rim = c(init = 0.5,   lb = 1e-4, ub = 1e3))
+  
+  # Inter-room resistance
+  model$setParameter(Rij = c(init = 0.1, lb = 1e-5, ub = 1e3))
+  
+  # Room-radiator resistance
+  model$setParameter(Rir = c(init = 0.1, lb = 1e-5, ub = 1e3))
+  model$setParameter(Rjr = c(init = 0.1, lb = 1e-5, ub = 1e3))
+  
+  # Radiator heat capacity
+  model$setParameter(Cr = c(init = 8.4,    lb = 1e-6, ub = 1e3))
+  
+  # Delay time constant
+  model$setParameter(tau_s = c(init = 1.34, lb = 1e-4, ub = 48))
+  
+  # =====================================================
+  # Solar spline parameters
+  # =====================================================
+  ub_aw <- 7.5 + 4.8 + 5
+  model$setParameter(Aw1 = c(init = 17, lb = 1e-3, ub = ub_aw))
+  model$setParameter(Aw2 = c(init = 4,  lb = 1e-3, ub = ub_aw))
+  model$setParameter(Aw3 = c(init = 3,  lb = 1e-3, ub = ub_aw))
+  model$setParameter(Aw4 = c(init = 3,  lb = 1e-3, ub = ub_aw))
+  model$setParameter(Aw5 = c(init = 5,  lb = 1e-3, ub = ub_aw))
+  
+  # =====================================================
+  # Noise parameters
+  # =====================================================
+  model$setParameter(p11 = c(init = 1,   lb = -20, ub = 10))
+  model$setParameter(p22 = c(init = 1,   lb = -20, ub = 10))
+  model$setParameter(p33 = c(init = -5,  lb = -20, ub = 10))
+  model$setParameter(p44 = c(init = -5,  lb = -20, ub = 10))
+  model$setParameter(e11 = c(init = -1,  lb = -50, ub = 10))
+  
+  # Fit
+  fit <- model$estimate(data, firstorder = TRUE)
+  return(fit)
+}
